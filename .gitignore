@@ -1,0 +1,48 @@
+# SwiftPM 缓存和本地构建产物
+/.build/
+/.swiftpm/
+/build/
+/DerivedData/
+/dist/
+*.app/
+*.dSYM/
+*.xcarchive/
+# Package.resolved 如有生成应提交，不在这里忽略。
+
+# Xcode 的个人界面状态
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+# macOS / 外置磁盘元数据
+.DS_Store
+._*
+.AppleDouble/
+.LSOverride
+.Spotlight-V100/
+.Trashes/
+.fseventsd/
+
+# 编辑器临时文件和本地日志
+*~
+*.swp
+*.swo
+*.tmp
+*.log
+
+# 本地环境、账户凭据和私有签名材料
+.env
+.env.*
+.codex/
+.aws/
+auth.json
+credentials.json
+secrets.json
+*.pem
+*.p8
+*.p12
+*.pfx
+*.mobileprovision
+*.keychain
+*.keychain-db
