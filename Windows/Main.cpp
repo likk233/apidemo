@@ -27,7 +27,7 @@ struct Application {
     bool demo = false, hasKey = false, loadingCodex = false, loadingBalance = false, shuttingDown = false, trayAdded = false;
     int codexGeneration = 0, keyGeneration = 0, codexFailures = 0, balanceFailures = 0, dpi = 96;
     int64_t nextCodex = 0, nextBalance = 0;
-    HFONT normal = nullptr, title = nullptr, metric = nullptr, small = nullptr, settingsFont = nullptr;
+    HFONT normal = nullptr, title = nullptr, metric = nullptr, smallFont = nullptr, settingsFont = nullptr;
     HICON icon = nullptr; UINT taskbarCreated = 0;
     std::vector<Worker> workers;
     int settingsDpi = 96, settingsScroll = 0, settingsHeight = 650;
@@ -163,9 +163,9 @@ static void clearAccountState() {
     app.deepseekError.clear(); app.balanceFailures = 0; app.nextBalance = 0; saveState(); updateTray(); InvalidateRect(app.window, nullptr, FALSE);
 }
 static void makeFonts() {
-    for (HFONT font : {app.normal, app.title, app.metric, app.small}) if (font) DeleteObject(font);
+    for (HFONT font : {app.normal, app.title, app.metric, app.smallFont}) if (font) DeleteObject(font);
     auto create = [](int size, int weight) { return CreateFontW(-px(size), 0, 0, 0, weight, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI"); };
-    app.normal = create(13, FW_NORMAL); app.small = create(11, FW_NORMAL); app.title = create(18, FW_SEMIBOLD); app.metric = create(29, FW_SEMIBOLD);
+    app.normal = create(13, FW_NORMAL); app.smallFont = create(11, FW_NORMAL); app.title = create(18, FW_SEMIBOLD); app.metric = create(29, FW_SEMIBOLD);
 }
 static void text(HDC dc, const std::wstring& value, int x, int y, int w, int h, HFONT font, COLORREF color = RGB(232,232,232), UINT flags = DT_LEFT | DT_WORDBREAK | DT_NOPREFIX) {
     auto old = SelectObject(dc, font); SetBkMode(dc, TRANSPARENT); SetTextColor(dc, color);
@@ -194,10 +194,10 @@ static void paintDashboard(HWND window) {
     HBRUSH background = CreateSolidBrush(RGB(29,29,29)); FillRect(dc, &bounds, background); DeleteObject(background);
     int width = MulDiv(bounds.right, 96, app.dpi);
     text(dc, L"UsageBar", 22, 15, width - 150, 26, app.title);
-    text(dc, app.demo ? L"演示数据 · 不读取真实凭据" : L"AI 额度与余额，一眼掌握", 22, 43, width - 44, 20, app.small, RGB(150,150,150));
+    text(dc, app.demo ? L"演示数据 · 不读取真实凭据" : L"AI 额度与余额，一眼掌握", 22, 43, width - 44, 20, app.smallFont, RGB(150,150,150));
     box(dc, 14, 76, width - 28, 230, RGB(39,39,39));
     text(dc, L"Codex", 30, 90, 200, 26, app.title);
-    text(dc, app.loadingCodex ? L"正在刷新…" : app.codex ? wide(app.codex->plan + (app.codex->source == "rollout" ? " · 离线快照" : app.demo ? " · 演示" : " · 在线")) : L"账户额度", 30, 119, width - 60, 20, app.small, RGB(150,150,150));
+    text(dc, app.loadingCodex ? L"正在刷新…" : app.codex ? wide(app.codex->plan + (app.codex->source == "rollout" ? " · 离线快照" : app.demo ? " · 演示" : " · 在线")) : L"账户额度", 30, 119, width - 60, 20, app.smallFont, RGB(150,150,150));
     if (app.codex) {
         if (app.codex->windows.empty()) text(dc,L"接口未报告额度窗口，可查看更多账户信息。",30,153,width-60,70,app.normal,RGB(150,150,150));
         for (size_t i = 0; i < std::min<size_t>(2, app.codex->windows.size()); ++i) {
@@ -207,19 +207,19 @@ static void paintDashboard(HWND window) {
             box(dc, 30, y + 25, width - 60, 5, RGB(53,68,65), 4);
             int remaining = int((width - 60) * (100 - w.used) / 100);
             if (remaining > 0) box(dc, 30, y + 25, remaining, 5, RGB(32,161,137), 4);
-            text(dc, L"剩余 " + std::to_wstring(int(std::lround(100-w.used))) + L"%", 30, y + 35, 110, 19, app.small, RGB(150,150,150));
-            text(dc, resetText(w.resets), 135, y + 35, width - 165, 19, app.small, RGB(150,150,150), DT_RIGHT | DT_SINGLELINE);
+            text(dc, L"剩余 " + std::to_wstring(int(std::lround(100-w.used))) + L"%", 30, y + 35, 110, 19, app.smallFont, RGB(150,150,150));
+            text(dc, resetText(w.resets), 135, y + 35, width - 165, 19, app.smallFont, RGB(150,150,150), DT_RIGHT | DT_SINGLELINE);
         }
         auto status = !app.codexError.empty() ? L"刷新失败，显示上次数据" : !app.codex->fallback.empty() ? L"在线不可用，已回退离线" : L"更新 " + timestamp(app.codex->captured);
-        text(dc, status, 30, 282, width - 60, 18, app.small, RGB(150,150,150));
+        text(dc, status, 30, 282, width - 60, 18, app.smallFont, RGB(150,150,150));
     } else text(dc, wide(app.codexError.empty() ? "等待 Codex 数据…" : app.codexError), 30, 152, width - 60, 132, app.normal, RGB(193,179,145));
     box(dc, 14, 318, width - 28, 250, RGB(39,39,39));
     text(dc, L"DeepSeek", 30, 332, 200, 26, app.title);
-    text(dc, L"CNY", width - 75, 337, 45, 20, app.small, RGB(150,150,150), DT_RIGHT | DT_SINGLELINE);
+    text(dc, L"CNY", width - 75, 337, 45, 20, app.smallFont, RGB(150,150,150), DT_RIGHT | DT_SINGLELINE);
     if (app.balance) {
         const auto& b = *app.balance;
         text(dc, wide(money(b.total)), 30, 369, width - 60, 44, app.metric);
-        text(dc, L"充值 " + (b.toppedUp ? wide(money(*b.toppedUp)) : L"—") + L"    赠送 " + (b.granted ? wide(money(*b.granted)) : L"—"), 30, 414, width - 60, 24, app.small, RGB(178,178,178));
+        text(dc, L"充值 " + (b.toppedUp ? wide(money(*b.toppedUp)) : L"—") + L"    赠送 " + (b.granted ? wide(money(*b.granted)) : L"—"), 30, 414, width - 60, 24, app.smallFont, RGB(178,178,178));
         if (app.history.size() >= 2) {
             auto [low, high] = std::minmax_element(app.history.begin(), app.history.end(), [](const auto& a, const auto& b) { return a.amount < b.amount; });
             long double range = std::max<long double>(1, static_cast<long double>(high->amount) - low->amount);
@@ -234,14 +234,14 @@ static void paintDashboard(HWND window) {
         if (auto value = estimate(app.history)) {
             text(dc, L"估算日消费 " + wide(money(Money(std::min(value->perDay, 90000000000.0) * MoneyScale))) + L" / 天", 30, 485, width - 60, 23, app.normal);
             auto days = value->daysLeft < 1 ? L"不足 1 天" : value->daysLeft > 365 ? L"超过 365 天" : L"约 " + std::to_wstring(int(std::round(value->daysLeft))) + L" 天";
-            text(dc, L"按当前消费速度：" + std::wstring(days), 30, 510, width - 60, 20, app.small, RGB(150,150,150));
-        } else text(dc, L"记录满 30 分钟且有余额下降后显示消费估算", 30, 485, width - 60, 43, app.small, RGB(150,150,150));
-        text(dc, !app.deepseekError.empty() ? L"刷新失败，显示上次余额" : !b.available || b.total <= 0 ? L"账户没有可用额度，请充值" : app.loadingBalance ? L"正在刷新人民币余额…" : L"更新 " + timestamp(b.captured), 30, 543, width - 60, 18, app.small, RGB(150,150,150));
+            text(dc, L"按当前消费速度：" + std::wstring(days), 30, 510, width - 60, 20, app.smallFont, RGB(150,150,150));
+        } else text(dc, L"记录满 30 分钟且有余额下降后显示消费估算", 30, 485, width - 60, 43, app.smallFont, RGB(150,150,150));
+        text(dc, !app.deepseekError.empty() ? L"刷新失败，显示上次余额" : !b.available || b.total <= 0 ? L"账户没有可用额度，请充值" : app.loadingBalance ? L"正在刷新人民币余额…" : L"更新 " + timestamp(b.captured), 30, 543, width - 60, 18, app.smallFont, RGB(150,150,150));
     } else {
         text(dc, wide(!app.deepseekError.empty() ? app.deepseekError : app.hasKey ? "正在查询人民币余额…" : "连接 DeepSeek，随时查看人民币余额"), 30, 377, width - 60, 88, app.normal, RGB(193,179,145));
-        text(dc, L"在设置中添加 API Key；密钥由 Windows 加密保存。", 30, 491, width - 60, 48, app.small, RGB(150,150,150));
+        text(dc, L"在设置中添加 API Key；密钥由 Windows 加密保存。", 30, 491, width - 60, 48, app.smallFont, RGB(150,150,150));
     }
-    text(dc, L"凭据留在本机 · 无遥测 · 只读查询", 23, 627, width - 46, 20, app.small, RGB(150,150,150), DT_CENTER | DT_SINGLELINE);
+    text(dc, L"凭据留在本机 · 无遥测 · 只读查询", 23, 627, width - 46, 20, app.smallFont, RGB(150,150,150), DT_CENTER | DT_SINGLELINE);
     BitBlt(original, 0, 0, bounds.right, bounds.bottom, dc, 0, 0, SRCCOPY);
     SelectObject(dc, oldBitmap); DeleteObject(bitmap); DeleteDC(dc); EndPaint(window, &ps);
 }
@@ -475,7 +475,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE,PWSTR,int) {
     // Join finite, timeout-bounded requests before releasing application state.
     for(auto& worker:app.workers) if(worker.thread.joinable()) worker.thread.join();
     MSG pending{}; while(PeekMessageW(&pending,nullptr,ResultMessage,ResultMessage,PM_REMOVE)) delete reinterpret_cast<Result*>(pending.lParam);
-    for(auto font:{app.normal,app.title,app.metric,app.small}) if(font) DeleteObject(font);
+    for(auto font:{app.normal,app.title,app.metric,app.smallFont}) if(font) DeleteObject(font);
     if(app.icon) DestroyIcon(app.icon); if(SUCCEEDED(com)) CoUninitialize(); if(mutex) CloseHandle(mutex);
     return exitCode;
 }

@@ -8,9 +8,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test offline providers and parsers
-        run: scripts/test.sh
+        run: bash scripts/test.sh
       - name: Build Universal app
-        run: scripts/build-app.sh --universal
+        run: bash scripts/build-app.sh --universal
       - uses: actions/upload-artifact@v4
         with:
           name: UsageBar-macOS
