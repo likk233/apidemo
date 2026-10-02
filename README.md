@@ -1,6 +1,6 @@
 # UsageBar
 
-一个原生 macOS 菜单栏工具，用来查看 Codex 额度和 DeepSeek 人民币余额。使用 SwiftUI / AppKit 开发，无第三方运行时依赖。
+一个查看 Codex 额度和 DeepSeek 人民币余额的桌面工具。macOS 版使用 SwiftUI / AppKit 常驻菜单栏；新增的 Windows 版使用 C++ / Win32 常驻系统托盘，两版均无需第三方运行时。
 
 菜单栏示例：
 
@@ -9,6 +9,16 @@ C 12%  ·  D ¥16.34
 ```
 
 `C` 表示 Codex 额度使用比例，取接口返回的额度窗口中的最高值；`D` 表示 DeepSeek 的 CNY 余额。点击菜单栏图标可查看详情，右键可刷新、打开设置或退出。
+
+## Windows 版
+
+Windows 10 1607 及以上 / Windows 11 用户可以解压 `UsageBar-Windows-x64.zip`，双击其中的 **UsageBar.exe** 使用。无需安装 .NET、Node.js 或额外的 VC++ 运行库，不需要管理员权限。
+
+Windows 使用任务栏右下角的托盘图标，悬停提示和右键菜单显示 `C / D` 摘要；左键打开面板，右键刷新、设置或退出。Codex 默认读取 `%USERPROFILE%\.codex`，DeepSeek 密钥通过当前用户的 Windows DPAPI 加密保存，余额仅显示 CNY。
+
+Windows 配置、运行命令和构建说明见 [Windows 使用文档](Windows/README.md)。源码位于 `Windows/`；原 macOS 构建和配置方式继续可用。
+
+另提供 `UsageBar-Windows-arm64.zip`，供 Windows ARM 设备使用。
 
 ## 界面预览
 
@@ -31,7 +41,7 @@ C 12%  ·  D ¥16.34
 
 主面板根据内容调整高度。应用常驻菜单栏，不显示 Dock 图标；关闭设置窗口后仍会运行。
 
-## 安装与启动
+## macOS 安装与启动
 
 项目部署目标为 **macOS 13 及以上**，通用构建包含 **Apple Silicon（arm64）和 Intel（x86_64）** 两种架构。实际验证范围见下方说明。
 
@@ -89,7 +99,7 @@ DeepSeek 模块固定显示 **人民币 CNY**，不提供 USD 切换，也不做
 
 消费估算需要至少 30 分钟的余额记录，且存在余额下降。它根据下降金额估算消费，余额上涨不计为消费；不等同于官方账单。本地历史最多保留 14 天、每币种 500 条，新记录仅保存 CNY。点击「清除余额历史」后，曲线和估算会重新积累。
 
-## 从源码构建
+## 从源码构建 macOS 版
 
 需要 macOS、Swift 工具链及 Xcode 或 Command Line Tools。`Package.swift` 声明 Swift tools 5.9；本次构建验证使用 Apple Swift 6.4。
 
@@ -161,7 +171,9 @@ dist/UsageBar.app/Contents/MacOS/UsageBar --demo --smoke-test
 
 [macOS 工作流](.github/workflows/macos.yml) 在代码推送或 Pull Request 时运行离线测试、构建通用应用，并上传名为 `UsageBar-macOS` 的构建附件。可在仓库的 Actions 页面下载；工作流不会自动发布 Release，也不需要配置账户 API Key。
 
-源码提交应包含 `Sources/`、`Tests/`、`Resources/`、`scripts/`、`docs/`、`.github/`，以及根目录的包配置、README、`.gitignore` 和许可证文件。发布安装包时，将 `dist/UsageBar-macOS.zip` 作为 GitHub Release 附件上传。
+[Windows 工作流](.github/workflows/windows.yml) 在 Windows 构建 x64 EXE，执行核心回归、隔离的 DPAPI / 文件读取检查及演示启动检查，并提供 `UsageBar-Windows-x64.zip` 附件。工作流需要推送后实际执行；仅添加配置文件不代表 CI 已通过。
+
+源码提交应包含 `Sources/`、`Tests/`、`Resources/`、`Windows/`、`scripts/`、`docs/`、`.github/`，以及根目录的包配置、README、`.gitignore` 和许可证文件。发布安装包时，将 `dist/UsageBar-macOS.zip`、`dist/UsageBar-Windows-x64.zip` 作为 GitHub Release 附件上传。
 
 `.gitignore` 排除构建产物、macOS 元数据、本地环境文件和常见凭据文件。它只影响 Git 收录文件，手动上传或自行压缩目录时不会自动过滤。
 
@@ -173,6 +185,8 @@ dist/UsageBar.app/Contents/MacOS/UsageBar --demo --smoke-test
 - 不包含遥测、埋点或第三方代理服务。
 - 构建脚本不打包本机钥匙串、Codex 登录文件或用户偏好数据。
 
+Windows 版使用 `%LOCALAPPDATA%\UsageBar` 保存配置、CNY 历史和提醒状态。DeepSeek Key 位于 DPAPI 加密的 `deepseek-key.dat` 中，不写入状态 JSON 或 EXE。两种系统之间不会自动同步本地密钥或配置。
+
 ## 验证范围与限制
 
 已在 Apple Silicon Mac 上通过 20 项离线回归检查，完成 arm64 / x86_64 Release 构建、通用二进制检查、签名验证和 ZIP 校验，并检查原生界面预览。
@@ -181,6 +195,8 @@ Intel Mac 和 macOS 13 尚未实机验证；新工具链构建产物在旧系统
 
 Codex 在线额度接口未公开，可能随服务变化。离线扫描有文件数和读取量限制，历史快照不能保证反映实时额度。
 
+Windows 版已通过 17 项可移植核心回归及 x64 / ARM64 交叉编译，Windows 专用检查程序已编译，但尚未实机运行。当前 EXE 未进行商业代码签名。详细范围见 [Windows 验证记录](docs/WINDOWS_VERIFICATION.md)。
+
 ## 项目结构
 
 ```text
@@ -188,6 +204,7 @@ Sources/
 ├── UsageBar/              # 菜单栏、设置、面板和应用状态
 └── UsageCore/             # 解析、请求、会话读取、余额历史和钥匙串
 Tests/UsageCoreTests/      # 离线回归检查
+Windows/                  # C++ / Win32 托盘应用、回归检查及附带 JSON 库
 Resources/                # 应用 Info.plist
 scripts/                  # 构建、测试及图标生成
 docs/                     # 仓库分析、验证记录和预览图片
@@ -203,3 +220,5 @@ Package.swift             # Swift Package 配置
 - [pantsari/deepseek-usage-tracker](https://github.com/pantsari/deepseek-usage-tracker)：DeepSeek 余额、消费估算与阈值提醒思路。
 
 移植分析见 [仓库分析文档](docs/REPOSITORY_ANALYSIS.md)。UsageBar 使用 [MIT License](LICENSE)，原项目的版权及许可声明保留在 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) 中。
+
+Windows 版附带 [nlohmann/json 3.12.0](https://github.com/nlohmann/json/tree/v3.12.0)，使用 MIT 许可；完整声明见 [JSON-LICENSE.txt](Windows/vendor/JSON-LICENSE.txt)。

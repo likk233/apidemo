@@ -1,0 +1,29 @@
+name: Windows
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test native Windows app
+        shell: pwsh
+        run: ./scripts/build-windows.ps1 -Architecture x64
+      - name: Demo startup smoke test
+        shell: pwsh
+        run: |
+          $process = Start-Process ./dist/windows-x64/UsageBar.exe -ArgumentList '--demo', '--smoke-test' -PassThru
+          if (-not $process.WaitForExit(15000)) {
+            Stop-Process -Id $process.Id -Force
+            throw 'Demo did not exit within 15 seconds'
+          }
+          if ($process.ExitCode -ne 0) { throw "Demo failed: $($process.ExitCode)" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UsageBar-Windows-x64
+          path: dist/UsageBar-Windows-x64.zip
+          if-no-files-found: error

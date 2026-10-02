@@ -7,6 +7,14 @@
 *.app/
 *.dSYM/
 *.xcarchive/
+/Windows/build/
+*.exe
+*.dll
+*.obj
+*.o
+*.pdb
+*.ilk
+*.lib
 # Package.resolved 如有生成应提交，不在这里忽略。
 
 # Xcode 的个人界面状态
@@ -39,6 +47,9 @@ xcuserdata/
 auth.json
 credentials.json
 secrets.json
+# UsageBar Windows 运行数据：加密密钥、个人目录和余额历史
+deepseek-key.dat
+state.json
 *.pem
 *.p8
 *.p12

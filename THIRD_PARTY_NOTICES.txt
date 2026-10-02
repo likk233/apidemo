@@ -1,4 +1,11 @@
 UsageBar incorporates logic ported from the following MIT projects.
+The Windows build additionally includes nlohmann/json 3.12.0 (MIT).
+Source: https://github.com/nlohmann/json/tree/v3.12.0
+Full copyright and license: Windows/vendor/JSON-LICENSE.txt in source;
+JSON-LICENSE.txt beside UsageBar.exe in the Windows distribution.
+Cross-compiled Windows binaries statically include LLVM/MinGW runtime code.
+Their unmodified license notices are included in Windows/vendor/licenses/
+in source, and licenses/ in the Windows distribution.
 Sources reviewed on 2026-10-02; original copyright notices follow.
 
 vscode-codex-usage
@@ -53,4 +60,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
