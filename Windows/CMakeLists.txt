@@ -19,6 +19,8 @@ if(WIN32)
   target_link_libraries(UsageBarPlatformChecks PRIVATE UsageBarCore winhttp crypt32 shell32 ole32 uuid advapi32)
   add_test(NAME UsageBarPlatformChecks COMMAND UsageBarPlatformChecks)
   if(MSVC)
+    # app.rc already embeds app.manifest as resource 1; avoid a duplicate generated manifest.
+    target_link_options(UsageBar PRIVATE /MANIFEST:NO)
     # Single EXE: statically link the compiler runtime; no VC++ redistributable required.
     set_property(TARGET UsageBar UsageBarCore UsageBarChecks UsageBarPlatformChecks PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     target_compile_options(UsageBarCore PRIVATE /utf-8 /W4)
